@@ -1,35 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App.jsx
+import React, { useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "./App.css"; // Make sure this import is correct
+import * as parkData from "./data/skateboard-parks.json";
+import {Icon} from "leaflet"
+import locationIcon from './assets/location.svg'
 
-function App() {
-  const [count, setCount] = useState(0)
+const markerIcon = new Icon({
+  iconUrl: locationIcon,
+  iconSize: [55,55],
+})
+
+export default function App() {
+  const [activePark, setActivePark] = useState(null);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <MapContainer center={[45.4, -75.7]} zoom={8} scrollWheelZoom={true} >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      />
 
-export default App
+      {parkData.features.map((park) => (
+        <Marker
+          key={park.properties.PARK_ID}
+          position={[
+            park.geometry.coordinates[1],
+            park.geometry.coordinates[0],
+          ]}
+          icon = {markerIcon}
+          eventHandlers={{
+            click: () => {
+              setActivePark(park);
+            },
+          }}
+        >
+          {activePark === park && (
+            <Popup position={[
+              park.geometry.coordinates[1],
+              park.geometry.coordinates[0],
+            ]} onClose={() => setActivePark(null)}>
+              <div>
+                <h2>{park.properties.NAME}</h2>
+                <p>{park.properties.DESCRIPTIO}</p>
+              </div>
+            </Popup>
+          )}
+        </Marker>
+      ))}
+    </MapContainer>
+  );
+}
